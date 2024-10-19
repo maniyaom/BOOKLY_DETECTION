@@ -1,4 +1,4 @@
-# Project Title: Web Security Enhancement Tool
+# Web Security Enhancement Tool
 
 ## Description
 
