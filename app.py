@@ -8,11 +8,11 @@ import warnings
 import os
 
 db_config = {
-    'host': os.getenv('HOST'),
-    'user': os.getenv('USER'),
-    'password': os.getenv('PASSWORD'),
-    'database': os.getenv('DATABASE'),
-    'port' : os.getenv('PORT')
+    'host': 'mysql-2b9a9625-maniyaom592-fee0.h.aivencloud.com',
+    'user': os.getenv('AVIEN_DATABASE_USERNAME'),
+    'password': os.getenv('AVIEN_DATABASE_PASSWORD'),
+    'database': 'defaultdb',
+    'port' : '12116'
 }
 
 xss_bad_words = [
@@ -242,5 +242,4 @@ def predict():
         })
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 4000))
-    app.run(debug=True, host='0.0.0.0', port=port)
+    app.run(debug=True)
