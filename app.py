@@ -111,29 +111,29 @@ def index():
     try:
         if intrusion_status == 'both':
             if formatted_from_datetime and formatted_to_datetime:
-                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion WHERE timestamp >= %s AND timestamp <= %s ORDER BY timestamp", (formatted_from_datetime, formatted_to_datetime,))
+                cursor.execute("SELECT * FROM intrusion WHERE timestamp >= %s AND timestamp <= %s ORDER BY id DESC", (formatted_from_datetime, formatted_to_datetime,))
             
             elif formatted_from_datetime:
-                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion WHERE timestamp >= %s ORDER BY timestamp", (formatted_from_datetime,))
+                cursor.execute("SELECT * FROM intrusion WHERE timestamp >= %s ORDER BY id desc", (formatted_from_datetime,))
             
             elif formatted_to_datetime:
-                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion WHERE timestamp <= %s ORDER BY timestamp", (formatted_to_datetime,))
+                cursor.execute("SELECT * FROM intrusion WHERE timestamp <= %s ORDER BY id desc", (formatted_to_datetime,))
 
             else:
-                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion ORDER BY timestamp;")
+                cursor.execute("SELECT * FROM intrusion ORDER BY id desc;")
 
         elif intrusion_status in ['Intrusion detected', 'Intrusion not detected']:
             if formatted_from_datetime and formatted_to_datetime:
-                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion WHERE status = %s AND timestamp >= %s AND timestamp <= %s ORDER BY timestamp", (intrusion_status, formatted_from_datetime, formatted_to_datetime))
+                cursor.execute("SELECT * FROM intrusion WHERE status = %s AND timestamp >= %s AND timestamp <= %s ORDER BY id desc", (intrusion_status, formatted_from_datetime, formatted_to_datetime))
 
             elif formatted_from_datetime:
-                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion WHERE status = %s AND timestamp >= %s ORDER BY timestamp", (intrusion_status, formatted_from_datetime,))
+                cursor.execute("SELECT * FROM intrusion WHERE status = %s AND timestamp >= %s ORDER BY id desc", (intrusion_status, formatted_from_datetime,))
             
             elif formatted_to_datetime:
-                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion WHERE status = %s AND timestamp <= %s ORDER BY timestamp", (intrusion_status, formatted_to_datetime,))
+                cursor.execute("SELECT * FROM intrusion WHERE status = %s AND timestamp <= %s ORDER BY id desc", (intrusion_status, formatted_to_datetime,))
             
             else:
-                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion WHERE status = %s ORDER BY timestamp", (intrusion_status,))
+                cursor.execute("SELECT * FROM intrusion WHERE status = %s ORDER BY id desc", (intrusion_status,))
 
         intrusion_data = cursor.fetchall()
     except mysql.connector.Error as err:
