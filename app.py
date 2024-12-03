@@ -15,67 +15,15 @@ db_config = {
     'port' : '12116'
 }
 
-xss_bad_words = [
-    "<script>",
-    "javascript:",
-    "onload",
-    "onerror",
-    "<img>",
-    "<iframe>",
-    "<body>",
-    "alert()",
-    "document.cookie",
-    '<a href="javascript:',
-    "eval()",
-    "<svg>",
-    "<style>",
-    "<meta>",
-    "onfocus",
-    "onmouseover",
-    "innerHTML",
-    "XMLHttpRequest",
-    "<input>",
-    "src",
-    "window.location",
-    "parent.location",
-    "top.location",
-    "setTimeout()",
-    "setInterval()",
-    "<form>",
-    "<object>",
-    "<embed>",
-    "<video>",
-    "<audio>",
-    "<marquee>",
-    "<table background=",
-    "<link>",
-     "select", 
-    "delete", 
-    "update", 
-    "insert", 
-    "drop", 
-    "alter", 
-    "create", 
-    "truncate", 
-    "union", 
-    "group by", 
-    "order by", 
-    "having", 
-    "exec", 
-    "execute", 
-    "declare", 
-    "cast", 
-    "convert", 
-    "use", 
-    "shutdown", 
-    "xp_cmdshell", 
-    "sp_executesql", 
-    "information_schema", 
-    "sysobjects", 
-    "syscolumns", 
-    "sysdatabases", 
-    "sysusers"
-    ]
+BAD_WORDS = {
+    "<script>", "javascript:", "onload", "onerror", "<img>", "<iframe>", "<body>", "alert()", "document.cookie",
+    '<a href="javascript:', "eval()", "<svg>", "<style>", "<meta>", "onfocus", "onmouseover", "innerHTML",
+    "XMLHttpRequest", "<input>", "src", "window.location", "parent.location", "top.location", "setTimeout()",
+    "setInterval()", "<form>", "<object>", "<embed>", "<video>", "<audio>", "<marquee>", "<table background=",
+    "<link>", "select", "delete", "update", "insert", "drop", "alter", "create", "truncate", "union", "group by",
+    "order by", "having", "exec", "execute", "declare", "cast", "convert", "use", "shutdown", "xp_cmdshell",
+    "sp_executesql", "information_schema", "sysobjects", "syscolumns", "sysdatabases", "sysusers"
+}
 
 def get_db_connection():
     connection = mysql.connector.connect(**db_config)
@@ -113,26 +61,26 @@ def get_location(ip):
             "ISP": None
         }
 
-def count_words(line):
-        count = 0
-        for word in xss_bad_words:
-            count += line.count(word)
-        return count
+# Counts the occurrences of bad words in a given line
+def count_bad_words(line):
+    return sum(line.count(word) for word in BAD_WORDS)
 
-def preprocessing(data):
-    l1 = data.strip()
-    single_quote = l1.count("'")
-    double_quote = l1.count("\"")
-    badwords = count_words(data)
-    round_braces = l1.count("(") + l1.count(")")
-    angular_brackets = l1.count("<") + l1.count(">")
-    forward_slash = l1.count('/')
-    dash = l1.count('-')
-    hash = l1.count('#')
-    astrict = l1.count('*')
-    ampercent = l1.count('&')
-    equalto = l1.count('=')
-    return [single_quote, double_quote, dash, hash, astrict, ampercent, equalto, badwords, round_braces, angular_brackets, forward_slash]
+# Extracts features from the input string for model prediction
+def preprocess(data):
+    stripped_data = data.strip()
+    return [
+        stripped_data.count("'"),
+        stripped_data.count("\""),
+        stripped_data.count("-"),
+        stripped_data.count("#"),
+        stripped_data.count("*"),
+        stripped_data.count("&"),
+        stripped_data.count("="),
+        count_bad_words(stripped_data),
+        stripped_data.count("(") + stripped_data.count(")"),
+        stripped_data.count("<") + stripped_data.count(">"),
+        stripped_data.count("/")
+    ]
 
 app = Flask(__name__)
 
@@ -163,29 +111,29 @@ def index():
     try:
         if intrusion_status == 'both':
             if formatted_from_datetime and formatted_to_datetime:
-                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion WHERE timestamp >= %s AND timestamp <= %s ORDER BY timestamp DESC", (formatted_from_datetime, formatted_to_datetime,))
+                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion WHERE timestamp >= %s AND timestamp <= %s ORDER BY timestamp", (formatted_from_datetime, formatted_to_datetime,))
             
             elif formatted_from_datetime:
-                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion WHERE timestamp >= %s ORDER BY timestamp DESC", (formatted_from_datetime,))
+                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion WHERE timestamp >= %s ORDER BY timestamp", (formatted_from_datetime,))
             
             elif formatted_to_datetime:
-                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion WHERE timestamp <= %s ORDER BY timestamp DESC", (formatted_to_datetime,))
+                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion WHERE timestamp <= %s ORDER BY timestamp", (formatted_to_datetime,))
 
             else:
-                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion ORDER BY timestamp DESC;")
+                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion ORDER BY timestamp;")
 
         elif intrusion_status in ['Intrusion detected', 'Intrusion not detected']:
             if formatted_from_datetime and formatted_to_datetime:
-                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion WHERE status = %s AND timestamp >= %s AND timestamp <= %s ORDER BY timestamp DESC", (intrusion_status, formatted_from_datetime, formatted_to_datetime))
+                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion WHERE status = %s AND timestamp >= %s AND timestamp <= %s ORDER BY timestamp", (intrusion_status, formatted_from_datetime, formatted_to_datetime))
 
             elif formatted_from_datetime:
-                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion WHERE status = %s AND timestamp >= %s ORDER BY timestamp DESC", (intrusion_status, formatted_from_datetime,))
+                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion WHERE status = %s AND timestamp >= %s ORDER BY timestamp", (intrusion_status, formatted_from_datetime,))
             
             elif formatted_to_datetime:
-                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion WHERE status = %s AND timestamp <= %s ORDER BY timestamp DESC", (intrusion_status, formatted_to_datetime,))
+                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion WHERE status = %s AND timestamp <= %s ORDER BY timestamp", (intrusion_status, formatted_to_datetime,))
             
             else:
-                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion WHERE status = %s ORDER BY timestamp DESC", (intrusion_status,))
+                cursor.execute("SELECT timestamp, payload, ipaddress, status, city, state, country, latitude, longitude, postal, ISP FROM intrusion WHERE status = %s ORDER BY timestamp", (intrusion_status,))
 
         intrusion_data = cursor.fetchall()
     except mysql.connector.Error as err:
@@ -208,8 +156,9 @@ def predict():
     warnings.filterwarnings("ignore", message="X does not have valid feature names")
 
     if('payload' in data):
-        processed_data = preprocessing(data['payload'])
+        processed_data = preprocess(data['payload'])
         prediction = model.predict([processed_data])
+        print(prediction[0])
         if prediction[0] == 0:
              conn = get_db_connection()
              cursor = conn.cursor(dictionary=True)
